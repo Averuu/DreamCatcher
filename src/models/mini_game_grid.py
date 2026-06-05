@@ -25,6 +25,6 @@ class Grid:
             # а координаты - как векторы. Складываем векторы
             for ix, iy in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
                 cell = self.get_cell(x + ix, y + iy)
-                if cell:
+                if cell is not None:
                     neighbors.append((x + ix, y + iy))
             return neighbors

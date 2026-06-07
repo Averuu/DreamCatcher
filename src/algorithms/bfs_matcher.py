@@ -7,7 +7,7 @@ class BFSMatcher:
         width = grid.width
         height = grid.height
 
-        visited = [[False] * width for i in height]
+        visited = [[False] * width for i in range(height)]
 
         queue = [(x, y)]  # начальная точка
         head = 0
@@ -19,6 +19,7 @@ class BFSMatcher:
             new_y = queue[head][1]
 
             head += 1
+            result.append((new_x, new_y))
 
             for neigh_x, neigh_y in grid.get_neighbors(new_x, new_y):
                 if not visited[neigh_y][neigh_x]:

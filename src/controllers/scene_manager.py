@@ -1,6 +1,8 @@
 class SceneManager:
     def __init__(self):
         self.current_scene = "MENU"
-    
-    def switch_to(self, new_scene):
-        self.current_scene = new_scene
+        self.active_controller = None
+
+    def switch_to(self, scene, controller=None):
+        self.current_scene = scene
+        self.active_controller = controller

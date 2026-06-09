@@ -6,11 +6,17 @@ from src.views.game_screen import render_game_select, get_clicked_game
 from src.views.hud import HUD
 from src.models.mini_game_grid import Grid
 from src.views.mini_game_views.gardener_view import GardenerView
+from src.views.mini_game_views.delivery_view import DeliveryView
 from src.controllers.mini_game_controllers.gardener_controller import GardenerController
+from src.controllers.mini_game_controllers.delivery_controller import DeliveryController
 from src.models.player_resume import PlayerResume
 
 
 class DreamCatcherApp:
+
+    MINI_GAME_SCENES = ("GARDENER", "DELIVERY")
+    GRID_OFFSET_X = 20
+    GRID_OFFSET_Y = 80
 
     def __init__(self):
         pygame.init()
@@ -27,18 +33,22 @@ class DreamCatcherApp:
         self.scene_manager = SceneManager()
         self.player = PlayerResume()
 
-        self.grid = Grid(10, 10)
-        self.gardener_view = GardenerView(self.grid, cell_size=40)
-        self.gardener_controller = GardenerController(self.grid, self.gardener_view)
-        self.hud = HUD(self.smol_font)
+        gardener_grid = Grid(10, 10)
+        self.gardener_view = GardenerView(gardener_grid, cell_size=40)
+        self.gardener_controller = GardenerController(gardener_grid, self.gardener_view)
 
+        delivery_grid = Grid(10, 10)
+        self.delivery_view = DeliveryView(delivery_grid, cell_size=40)
+        self.delivery_controller = DeliveryController(delivery_grid, self.delivery_view)
+
+        self.hud = HUD(self.smol_font)
         self._controller_ready = False
 
     def run(self):
         while True:
             delta_time = self.clock.tick(60) / 1000.0
-            self._handle_events()
             self._update(delta_time)
+            self._handle_events()
             self._render()
             pygame.display.flip()
 
@@ -58,63 +68,122 @@ class DreamCatcherApp:
                 if event.key == pygame.K_SPACE and self.scene_manager.current_scene == "MENU":
                     self.scene_manager.switch_to("GAME_SELECT")
 
-                if event.key == pygame.K_h and self.scene_manager.current_scene == "GARDENER":
+                if event.key == pygame.K_h and self.scene_manager.current_scene in self.MINI_GAME_SCENES:
                     controller = self.scene_manager.active_controller
                     if controller and hasattr(controller, "get_hint"):
                         controller.get_hint()
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.scene_manager.current_scene == "GAME_SELECT":
-                    picked_game = get_clicked_game(
-                        event.pos[0],
-                        event.pos[1],
-                        self.screen.get_width(),
-                        self.screen.get_height()
-                    )
-                    if picked_game == "gardener":
-                        self.scene_manager.switch_to("GARDENER", self.gardener_controller)
-                        self.gardener_view.set_offset(20, 80)
-                        self._controller_ready = False
+                    self._handle_game_select_click(event.pos[0], event.pos[1])
 
             if self.scene_manager.active_controller:
                 self.scene_manager.active_controller.handle_event(event)
 
+    def _handle_game_select_click(self, mouse_x, mouse_y):
+        picked_game = get_clicked_game(
+            mouse_x,
+            mouse_y,
+            self.screen.get_width(),
+            self.screen.get_height()
+        )
+        if picked_game is None:
+            return
+        if picked_game not in self.player.unlocked_games:
+            return
+
+        if picked_game == "gardener":
+            self.scene_manager.switch_to("GARDENER", self.gardener_controller)
+            self.gardener_view.set_offset(self.GRID_OFFSET_X, self.GRID_OFFSET_Y)
+            self._controller_ready = False
+        elif picked_game == "delivery":
+            self.scene_manager.switch_to("DELIVERY", self.delivery_controller)
+            self.delivery_view.set_offset(self.GRID_OFFSET_X, self.GRID_OFFSET_Y)
+            self._controller_ready = False
+
     def _update(self, delta_time):
-        if self.scene_manager.current_scene == "GARDENER":
-            controller = self.scene_manager.active_controller
-            if controller and not self._controller_ready:
-                controller.setup()
-                self._controller_ready = True
+        if self.scene_manager.current_scene not in self.MINI_GAME_SCENES:
+            return
 
-            if controller and controller.is_finished() and not controller.was_score_added():
-                self.player.add_score(controller.get_score())
-                controller.mark_score_added()
+        controller = self.scene_manager.active_controller
+        if controller and not self._controller_ready:
+            controller.setup()
+            self._controller_ready = True
 
-            if controller:
-                controller.update(delta_time)
+        if controller and controller.is_finished() and not controller.was_score_added():
+            self.player.add_score(controller.get_score())
+            controller.mark_score_added()
+
+        if controller:
+            controller.update(delta_time)
 
     def _render(self):
-        if self.scene_manager.current_scene == "MENU":
+        current_scene = self.scene_manager.current_scene
+
+        if current_scene == "MENU":
             render_menu(self.screen, self.font_large, self.player.total_score, self.smol_font)
+            return
 
-        elif self.scene_manager.current_scene == "GAME_SELECT":
+        if current_scene == "GAME_SELECT":
             render_game_select(self.screen, self.font_large, self.smol_font, self.player)
+            return
 
-        elif self.scene_manager.current_scene == "GARDENER":
-            self.screen.fill((50, 50, 50))
-            controller = self.scene_manager.active_controller
-            if controller:
-                offset_x, offset_y = 20, 80
-                self.gardener_view.set_offset(offset_x, offset_y)
-                self.gardener_view.render(self.screen, hint=controller.hint)
-                self.hud.render(
-                    self.screen,
-                    game_title=controller.game_title,
-                    score=controller.get_score(),
-                    progress_text=controller.progress_text,
-                    message=("Нажмите H для подсказки" if not controller.is_finished()
-                             else "Уровень пройден! Нажмите ESC в меню")
-                )
+        if current_scene == "GARDENER":
+            self._render_gardener()
+            return
+
+        if current_scene == "DELIVERY":
+            self._render_delivery()
+
+    def _render_gardener(self):
+        self.screen.fill((50, 50, 50))
+        controller = self.scene_manager.active_controller
+        if not controller:
+            return
+
+        self.gardener_view.set_offset(self.GRID_OFFSET_X, self.GRID_OFFSET_Y)
+        self.gardener_view.render(self.screen, hint=controller.hint)
+        self.hud.render(
+            self.screen,
+            game_title=controller.game_title,
+            score=controller.get_score(),
+            progress_text=controller.progress_text,
+            message=self._make_gardener_message(controller)
+        )
+
+    def _render_delivery(self):
+        self.screen.fill((50, 50, 50))
+        controller = self.scene_manager.active_controller
+        if not controller:
+            return
+
+        self.delivery_view.set_offset(self.GRID_OFFSET_X, self.GRID_OFFSET_Y)
+        self.delivery_view.render(
+            self.screen,
+            hint=controller.hint,
+            player_path=controller.player_path
+        )
+        self.hud.render(
+            self.screen,
+            game_title=controller.game_title,
+            score=controller.get_score(),
+            progress_text=controller.progress_text,
+            message=self._make_delivery_message(controller)
+        )
+
+    def _make_gardener_message(self, controller):
+        if controller.is_finished():
+            return "Уровень пройден! Нажмите ESC в меню"
+        return "Нажмите H для подсказки"
+
+    def _make_delivery_message(self, controller):
+        if controller.is_finished():
+            if controller.hint_was_used:
+                return "Маршрут готов. Подсказка была — 0 очков"
+            return "Доставка завершена! Нажмите ESC в меню"
+        if controller.hint_was_used:
+            return "Подсказка включена — за этот маршрут будет 0 очков"
+        return "Кликайте соседние клетки. H — подсказка"
 
     @staticmethod
     def _quit():

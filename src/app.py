@@ -7,14 +7,16 @@ from src.views.hud import HUD
 from src.models.mini_game_grid import Grid
 from src.views.mini_game_views.gardener_view import GardenerView
 from src.views.mini_game_views.delivery_view import DeliveryView
+from src.views.mini_game_views.analyst_view import AnalystView
 from src.controllers.mini_game_controllers.gardener_controller import GardenerController
 from src.controllers.mini_game_controllers.delivery_controller import DeliveryController
+from src.controllers.mini_game_controllers.analyst_controller import AnalystController
 from src.models.player_resume import PlayerResume
 
 
 class DreamCatcherApp:
 
-    MINI_GAME_SCENES = ("GARDENER", "DELIVERY")
+    MINI_GAME_SCENES = ("GARDENER", "DELIVERY", "ANALYST")
     GRID_OFFSET_X = 20
     GRID_OFFSET_Y = 80
 
@@ -26,7 +28,7 @@ class DreamCatcherApp:
 
         try:
             self.font_large = pygame.font.Font("./src/assets/fonts/comic.ttf", 36)
-        except (FileNotFoundError, pygame.error):
+        except Exception:
             self.font_large = pygame.font.Font(None, 36)
         self.smol_font = pygame.font.Font(None, 24)
 
@@ -40,6 +42,10 @@ class DreamCatcherApp:
         delivery_grid = Grid(10, 10)
         self.delivery_view = DeliveryView(delivery_grid, cell_size=40)
         self.delivery_controller = DeliveryController(delivery_grid, self.delivery_view)
+
+        analyst_grid = Grid(10, 10)
+        self.analyst_view = AnalystView(analyst_grid, cell_size=40)
+        self.analyst_controller = AnalystController(analyst_grid, self.analyst_view)
 
         self.hud = HUD(self.smol_font)
         self._controller_ready = False
@@ -100,6 +106,10 @@ class DreamCatcherApp:
             self.scene_manager.switch_to("DELIVERY", self.delivery_controller)
             self.delivery_view.set_offset(self.GRID_OFFSET_X, self.GRID_OFFSET_Y)
             self._controller_ready = False
+        elif picked_game == "analyst":
+            self.scene_manager.switch_to("ANALYST", self.analyst_controller)
+            self.analyst_view.set_offset(self.GRID_OFFSET_X, self.GRID_OFFSET_Y)
+            self._controller_ready = False
 
     def _update(self, delta_time):
         if self.scene_manager.current_scene not in self.MINI_GAME_SCENES:
@@ -134,6 +144,10 @@ class DreamCatcherApp:
 
         if current_scene == "DELIVERY":
             self._render_delivery()
+            return
+
+        if current_scene == "ANALYST":
+            self._render_analyst()
 
     def _render_gardener(self):
         self.screen.fill((50, 50, 50))
@@ -170,6 +184,35 @@ class DreamCatcherApp:
             progress_text=controller.progress_text,
             message=self._make_delivery_message(controller)
         )
+
+    def _render_analyst(self):
+        self.screen.fill((50, 50, 50))
+        controller = self.scene_manager.active_controller
+        if not controller:
+            return
+
+        self.analyst_view.set_offset(self.GRID_OFFSET_X, self.GRID_OFFSET_Y)
+        self.analyst_view.render(
+            self.screen,
+            hint=controller.hint,
+            player_path=controller.player_path
+        )
+        self.hud.render(
+            self.screen,
+            game_title=controller.game_title,
+            score=controller.get_score(),
+            progress_text=controller.progress_text,
+            message=self._make_analyst_message(controller)
+        )
+
+    def _make_analyst_message(self, controller):
+        if controller.is_finished():
+            if controller.hint_was_used:
+                return "Маршрут найден. Подсказка была — 0 очков"
+            return "Анализ завершён! Нажмите ESC в меню"
+        if controller.hint_was_used:
+            return "Подсказка включена — за этот маршрут будет 0 очков"
+        return "Кликайте соседние клетки. H — подсказка"
 
     def _make_gardener_message(self, controller):
         if controller.is_finished():

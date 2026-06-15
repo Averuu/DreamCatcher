@@ -67,8 +67,10 @@ class DreamCatcherApp:
                 if event.key == pygame.K_ESCAPE:
                     if self.scene_manager.current_scene == "MENU":
                         self._quit()
-                    else:
+                    elif self.scene_manager.current_scene == "GAME_SELECT":
                         self.scene_manager.switch_to("MENU")
+                    else:
+                        self.scene_manager.switch_to("GAME_SELECT")
                         self._controller_ready = False
 
                 if event.key == pygame.K_SPACE and self.scene_manager.current_scene == "MENU":

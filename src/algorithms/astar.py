@@ -40,7 +40,7 @@ class AStarSolver:
         path_cost = {(start_x, start_y): 0}
 
         while open_list:
-            _, current_x, current_y = AStarSolver._pick_smallest_priority(open_list)
+            cost, current_x, current_y = AStarSolver._pick_smallest_priority(open_list)
 
             if current_x == end_x and current_y == end_y:
                 return AStarSolver._build_path(came_from, start_x, start_y, end_x, end_y)

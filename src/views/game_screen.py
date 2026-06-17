@@ -11,8 +11,13 @@ COLOR_ANALYST = (148, 0, 211)
 COLOR_DELIVERY_LOCKED = (25, 40, 80)
 COLOR_ANALYST_LOCKED = (45, 0, 60)
 
-GAME_NAMES = ["gardener", "delivery", "analyst"]
-GAME_LABELS = ["Садовник", "Доставщик", "Аналитик"]
+COLOR_FINAL_LOCKED = (100, 100, 100)
+COLOR_FINAL = (255, 215, 0)
+FINAL_BUTTON_WIDTH = 300
+FINAL_BUTTON_HEIGHT = 60
+
+GAME_NAMES = ["gardener", "delivery", "analyst", "final"]
+GAME_LABELS = ["Садовник", "Доставщик", "Аналитик", "Финальный оффер"]
 
 
 def _make_button_rects(screen_width, screen_height):
@@ -26,6 +31,12 @@ def _make_button_rects(screen_width, screen_height):
     return rects
 
 
+def _make_final_button_rect(screen_width, screen_height):
+    start_y = (screen_height - BUTTON_HEIGHT) // 2 + 20 + BUTTON_HEIGHT + 30
+    x = (screen_width - FINAL_BUTTON_WIDTH) // 2
+    return pygame.Rect(x, start_y, FINAL_BUTTON_WIDTH, FINAL_BUTTON_HEIGHT)
+
+
 def _pick_button_color(game_name, player):
     if game_name == "gardener":
         return COLOR_GARDENER
@@ -36,6 +47,12 @@ def _pick_button_color(game_name, player):
     if game_name in player.unlocked_games:
         return COLOR_ANALYST
     return COLOR_ANALYST_LOCKED
+
+
+def _pick_final_button_color(player):
+    if player.total_score >= 1000:
+        return COLOR_FINAL
+    return COLOR_FINAL_LOCKED
 
 
 def render_game_select(screen, font_large, smol_font, player):
@@ -57,6 +74,15 @@ def render_game_select(screen, font_large, smol_font, player):
         label_rect = label.get_rect(center=button_rects[index].center)
         screen.blit(label, label_rect)
 
+    final_rect = _make_final_button_rect(screen.get_width(), screen.get_height())
+    final_color = _pick_final_button_color(player)
+    pygame.draw.rect(screen, final_color, final_rect)
+    pygame.draw.rect(screen, (0, 0, 0), final_rect, 2)
+
+    final_label = smol_font.render(GAME_LABELS[3], True, (255, 255, 255))
+    final_label_rect = final_label.get_rect(center=final_rect.center)
+    screen.blit(final_label, final_label_rect)
+
     score_line = smol_font.render(f"Всего очков: {player.total_score}", True, (200, 200, 200))
     screen.blit(score_line, (10, screen.get_height() - 35))
 
@@ -70,4 +96,7 @@ def get_clicked_game(mouse_x, mouse_y, screen_width, screen_height):
     for index in range(3):
         if button_rects[index].collidepoint(mouse_x, mouse_y):
             return GAME_NAMES[index]
+    final_rect = _make_final_button_rect(screen_width, screen_height)
+    if final_rect.collidepoint(mouse_x, mouse_y):
+        return "final"
     return None

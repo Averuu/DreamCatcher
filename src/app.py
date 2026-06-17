@@ -3,6 +3,7 @@ import sys
 from src.controllers.scene_manager import SceneManager
 from src.views.menu_screen import render_menu
 from src.views.game_screen import render_game_select, get_clicked_game
+from src.views.victory_screen import render_victory_screen
 from src.views.hud import HUD
 from src.models.mini_game_grid import Grid
 from src.views.mini_game_views.gardener_view import GardenerView
@@ -12,6 +13,7 @@ from src.controllers.mini_game_controllers.gardener_controller import GardenerCo
 from src.controllers.mini_game_controllers.delivery_controller import DeliveryController
 from src.controllers.mini_game_controllers.analyst_controller import AnalystController
 from src.models.player_resume import PlayerResume
+from src.utils.serialization import save_game, load_game
 
 
 class DreamCatcherApp:
@@ -33,7 +35,11 @@ class DreamCatcherApp:
         self.smol_font = pygame.font.Font(None, 24)
 
         self.scene_manager = SceneManager()
-        self.player = PlayerResume()
+        saved_data = load_game()
+        if saved_data:
+            self.player = PlayerResume.from_dict(saved_data)
+        else:
+            self.player = PlayerResume()
 
         gardener_grid = Grid(10, 10)
         self.gardener_view = GardenerView(gardener_grid, cell_size=40)
@@ -69,6 +75,8 @@ class DreamCatcherApp:
                         self._quit()
                     elif self.scene_manager.current_scene == "GAME_SELECT":
                         self.scene_manager.switch_to("MENU")
+                    elif self.scene_manager.current_scene == "VICTORY":
+                        self.scene_manager.switch_to("MENU")
                     else:
                         self.scene_manager.switch_to("GAME_SELECT")
                         self._controller_ready = False
@@ -97,6 +105,12 @@ class DreamCatcherApp:
         )
         if picked_game is None:
             return
+        if picked_game == "final":
+            if self.player.total_score >= 1000:
+                self.scene_manager.switch_to("VICTORY")
+                self._controller_ready = False
+            return
+
         if picked_game not in self.player.unlocked_games:
             return
 
@@ -150,6 +164,10 @@ class DreamCatcherApp:
 
         if current_scene == "ANALYST":
             self._render_analyst()
+            return
+
+        if current_scene == "VICTORY":
+            render_victory_screen(self.screen, self.font_large, self.smol_font)
 
     def _render_gardener(self):
         self.screen.fill((50, 50, 50))
@@ -230,7 +248,7 @@ class DreamCatcherApp:
             return "Подсказка включена — за этот маршрут будет 0 очков"
         return "Кликайте соседние клетки. H — подсказка"
 
-    @staticmethod
-    def _quit():
+    def _quit(self):
+        save_game(self.player.to_dict())
         pygame.quit()
         sys.exit()

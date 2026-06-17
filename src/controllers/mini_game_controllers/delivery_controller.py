@@ -46,7 +46,7 @@ class DeliveryController(BaseMiniGameController):
                 if (x, y) == (self.end_x, self.end_y):
                     continue
                 if random.random() < self.OBSTACLE_CHANCE:
-                    if random.random() < 0.5:
+                    if random.random() < 0.7:
                         self.grid.set_cell(x, y, self.HOUSE)
                     else:
                         self.grid.set_cell(x, y, self.FENCE)

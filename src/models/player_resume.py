@@ -8,7 +8,7 @@ class PlayerResume:
 
     def __init__(self):
         self.total_score = 0
-        self.unlocked_games = ["gardener"]   # начинаем с садовника
+        self.unlocked_games = ["gardener"]   # начинаем с садовника (не убийца)
 
     def add_score(self, points: int) -> None:
         """Добавляет очки и проверяет, не открылись ли новые игры."""
@@ -22,7 +22,7 @@ class PlayerResume:
                 self.unlocked_games.append(game)
 
     def to_dict(self) -> dict:
-        """Сериализация в словарь для сохранения."""
+        """Сохранение в json"""
         return {
             "total_score": self.total_score,
             "unlocked_games": self.unlocked_games
@@ -30,7 +30,7 @@ class PlayerResume:
 
     @classmethod
     def from_dict(cls, data: dict) -> "PlayerResume":
-        """Загрузка из словаря (десериализация)."""
+        """загрузка из json"""
         obj = cls()
         obj.total_score = data.get("total_score", 0)
         obj.unlocked_games = data.get("unlocked_games", ["gardener"])

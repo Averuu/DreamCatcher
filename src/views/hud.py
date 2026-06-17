@@ -18,18 +18,18 @@ class HUD:
         """
         y = 10
         title_surf = self.font.render(game_title, True, (255, 255, 255))
-        screen.blit(title_surf, (10, y))
+        screen.blit(title_surf, (440, y))
         y += 40
 
         score_surf = self.font.render(f"Очки: {score}", True, (255, 255, 255))
-        screen.blit(score_surf, (10, y))
+        screen.blit(score_surf, (440, y))
         y += 40
 
         if progress_text:
             prog_surf = self.font.render(progress_text, True, (255, 255, 255))
-            screen.blit(prog_surf, (10, y))
+            screen.blit(prog_surf, (440, y))
             y += 40
 
         if message:
             msg_surf = self.font.render(message, True, (255, 255, 0))
-            screen.blit(msg_surf, (10, y))
+            screen.blit(msg_surf, (440, y))

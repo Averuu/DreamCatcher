@@ -5,7 +5,6 @@ from src.views.menu_screen import render_menu
 from src.views.game_screen import render_game_select, get_clicked_game
 from src.views.victory_screen import render_victory_screen
 from src.views.hud import HUD
-from src.models.mini_game_grid import Grid
 from src.views.mini_game_views.gardener_view import GardenerView
 from src.views.mini_game_views.delivery_view import DeliveryView
 from src.views.mini_game_views.analyst_view import AnalystView
@@ -41,17 +40,14 @@ class DreamCatcherApp:
         else:
             self.player = PlayerResume()
 
-        gardener_grid = Grid(10, 10)
-        self.gardener_view = GardenerView(gardener_grid, cell_size=40)
-        self.gardener_controller = GardenerController(gardener_grid, self.gardener_view)
+        self.gardener_view = GardenerView(cell_size=40)
+        self.gardener_controller = GardenerController(self.gardener_view)
 
-        delivery_grid = Grid(10, 10)
-        self.delivery_view = DeliveryView(delivery_grid, cell_size=40)
-        self.delivery_controller = DeliveryController(delivery_grid, self.delivery_view)
+        self.delivery_view = DeliveryView(cell_size=40)
+        self.delivery_controller = DeliveryController(self.delivery_view)
 
-        analyst_grid = Grid(10, 10)
-        self.analyst_view = AnalystView(analyst_grid, cell_size=40)
-        self.analyst_controller = AnalystController(analyst_grid, self.analyst_view)
+        self.analyst_view = AnalystView(cell_size=40)
+        self.analyst_controller = AnalystController(self.analyst_view)
 
         self.hud = HUD(self.smol_font)
         self._controller_ready = False

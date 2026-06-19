@@ -12,9 +12,12 @@ class AnalystView(IGameView):
     COLOR_HINT = (255, 255, 0)
     COLOR_PLAYER = (30, 144, 255)
 
-    def __init__(self, grid, cell_size=40):
-        self.grid = grid
+    def __init__(self, cell_size=40):
+        self.grid = None
         self.cell_size = cell_size
+
+    def sync_grid(self, grid):
+        self.grid = grid
         self._offset_x = 0
         self._offset_y = 0
 

@@ -5,12 +5,9 @@ from abc import ABC, abstractmethod
 from src.views.interfaces import IGameView
 
 class BaseMiniGameController(ABC):
-    def __init__(self, grid, view: IGameView):
-        self.grid = grid
-        self.view = view          # зависит от абстракции
-        self._score = 0
-        self._finished = False
-        self._score_added_to_player = False   # флаг для предотвращения двойного начисления
+    def __init__(self, view: IGameView):
+        self.view = view
+        self._score_added_to_player = False
 
     @abstractmethod
     def setup(self, data=None) -> None:

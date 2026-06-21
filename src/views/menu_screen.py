@@ -1,6 +1,3 @@
-"""
-Отрисовка главного меню.
-"""
 import pygame
 
 def render_menu(screen, font_large, total_score, font_small):

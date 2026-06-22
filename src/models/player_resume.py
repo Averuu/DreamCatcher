@@ -16,7 +16,7 @@ class PlayerResume:
         self._update_unlocked_games()
 
     def _update_unlocked_games(self) -> None:
-        """Приватный метод: разблокирует игры при достижении порогов."""
+        """разблокирует игры при достижении порогов."""
         for game, threshold in self.GAME_THRESHOLDS.items():
             if game not in self.unlocked_games and self.total_score >= threshold:
                 self.unlocked_games.append(game)

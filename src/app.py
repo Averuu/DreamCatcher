@@ -18,6 +18,7 @@ from src.utils.serialization import save_game, load_game
 class DreamCatcherApp:
 
     MINI_GAME_SCENES = ("GARDENER", "DELIVERY", "ANALYST")
+    BG_COLOR = (30, 220, 255)
     GRID_OFFSET_X = 20
     GRID_OFFSET_Y = 80
 
@@ -32,6 +33,12 @@ class DreamCatcherApp:
         except Exception:
             self.font_large = pygame.font.Font(None, 36)
         self.smol_font = pygame.font.Font(None, 24)
+
+        try:
+            pygame.mixer.init()
+            self.startup_sound = pygame.mixer.Sound("./src/assets/sounds/dogcheck.ogg")
+        except Exception:
+            self.startup_sound = None
 
         self.scene_manager = SceneManager()
         saved_data = load_game()
@@ -51,6 +58,9 @@ class DreamCatcherApp:
 
         self.hud = HUD(self.smol_font)
         self._controller_ready = False
+
+        if self.startup_sound:
+            self.startup_sound.play(-1)
 
     def run(self):
         while True:
@@ -166,7 +176,7 @@ class DreamCatcherApp:
             render_victory_screen(self.screen, self.font_large, self.smol_font)
 
     def _render_gardener(self):
-        self.screen.fill((50, 50, 50))
+        self.screen.fill(self.BG_COLOR)
         controller = self.scene_manager.active_controller
         if not controller:
             return
@@ -182,7 +192,7 @@ class DreamCatcherApp:
         )
 
     def _render_delivery(self):
-        self.screen.fill((50, 50, 50))
+        self.screen.fill(self.BG_COLOR)
         controller = self.scene_manager.active_controller
         if not controller:
             return
@@ -202,7 +212,7 @@ class DreamCatcherApp:
         )
 
     def _render_analyst(self):
-        self.screen.fill((50, 50, 50))
+        self.screen.fill(self.BG_COLOR)
         controller = self.scene_manager.active_controller
         if not controller:
             return

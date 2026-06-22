@@ -2,8 +2,8 @@ import pygame
 from src.views.interfaces import IGameView
 
 class GardenerView(IGameView):
-    COLOR_GROUND = (34, 139, 34)
-    COLOR_WEED = (139, 69, 19)
+    COLOR_GROUND = (139, 69, 19)
+    COLOR_WEED = (50, 210, 50)
     COLOR_HINT = (255, 255, 0)
 
     def __init__(self, cell_size=40):
